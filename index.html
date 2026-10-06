@@ -999,6 +999,61 @@
         </div>
       </div>
     </div>
+
+    <!-- Column: ウサギ先攻（猟犬後攻）の場合の数理的帰結と手数の変化 -->
+    <div class="mt-8 glass-card p-6 sm:p-8 rounded-3xl border-amber-500/30 bg-slate-900/90 relative overflow-hidden">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center border border-amber-500/30">
+          <i data-lucide="help-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white">ウサギが先攻（猟犬が後攻）の場合はどうなるのか？</h3>
+          <span class="text-xs text-amber-400 font-mono">後退解析による厳密証明：勝敗の不変性と手数の変化（23手 → 24手）</span>
+        </div>
+      </div>
+
+      <p class="text-sm text-slate-300 leading-relaxed mb-6">
+        正規ルールでは「猟犬が先手」ですが、<strong>「もしウサギが先攻（猟犬が後攻）になったら勝敗や手数は変わるのか？」</strong>という疑問が生じます。後退解析の全状態データベース（Tablebase）によって明らかになった数学的事実を解説します。
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800">
+          <h4 class="text-xs font-bold text-cyan-400 font-mono uppercase mb-2 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4"></i> ① 猟犬の必勝は揺るがない
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            ウサギが先手で動いても、初期配置において猟犬は左端に陣取っているため、ウサギは背後へすり抜けることができません。どんな初手を指しても猟犬の100%包囲網を破ることはできず、<strong class="text-white">猟犬の必勝（H_WIN）のまま不変</strong>です。
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800">
+          <h4 class="text-xs font-bold text-amber-400 font-mono uppercase mb-2 flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4"></i> ② 手数は「23手 → 24手」に変化
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            終局までの最短手数は <strong class="text-white">23手から 24手へ（+1手）</strong> 伸びます。ウサギの初手合法手はマス7, 8, 9の3通りですが、いずれを選んでも後退解析における評価は「猟犬必勝・残り23手」の局面へと遷移するためです。
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800">
+          <h4 class="text-xs font-bold text-emerald-400 font-mono uppercase mb-2 flex items-center gap-2">
+            <i data-lucide="git-commit" class="w-4 h-4"></i> ③ 猟犬の手数は12手で同じ
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            猟犬先攻（23手）は「猟犬12手・ウサギ11手」でした。ウサギ先攻（24手）は「ウサギ12手・猟犬12手」となります。つまり、<strong class="text-white">猟犬が詰みに要する手数は12手で全く変わらず、ウサギの手数が初手分1回増えるだけ</strong>です。
+          </p>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed">
+        <strong class="text-amber-300">数理的根拠（最長抵抗の原則 Max）：</strong><br>
+        ウサギ初期ノード $r=10$ からの遷移先は $\text{Succ} = \{7, 8, 9\}$。<br>
+        全遷移先の距離は $d(7)=23, d(8)=23, d(9)=23$ であるため、
+        $$d(\text{初期}, \text{Turn}=\text{Hare}) = \max_{u \in \{7, 8, 9\}} d(u) + 1 = 23 + 1 = \mathbf{24\text{手}}$$
+        ウサギがどの手を選んで最善に抵抗しても、数学的に必ず 24手 で決着します。
+      </div>
+    </div>
+
   </section>
 
   <!-- Section 4: 最善手を打たなかった場合、基本ウサギ側が勝つのはなぜか -->
@@ -1202,21 +1257,47 @@
 
     <div class="glass-card p-6 sm:p-8 rounded-3xl border-slate-800 max-w-4xl mx-auto bg-slate-900/90">
       <!-- Game Mode Select -->
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-4">
-        <div class="flex items-center gap-3">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">あなたの陣営：</label>
-          <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-xs font-medium">
-            <button id="playAsHareBtn" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold transition">
-              ウサギで挑戦（AIが猟犬）
-            </button>
-            <button id="playAsHoundBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
-              猟犬で挑戦（AIがウサギ）
-            </button>
+      <div class="space-y-4 mb-6 border-b border-slate-800 pb-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <!-- 陣営選択 -->
+          <div class="flex items-center gap-3">
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">あなたの陣営：</label>
+            <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-xs font-medium">
+              <button id="playAsHareBtn" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold transition shadow-md shadow-rose-600/30">
+                🐰 ウサギで挑戦（AIが猟犬）
+              </button>
+              <button id="playAsHoundBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+                🐕 猟犬で挑戦（AIがウサギ）
+              </button>
+            </div>
+          </div>
+
+          <!-- 先攻・後攻選択 -->
+          <div class="flex items-center gap-3">
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">初手（先攻）：</label>
+            <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-xs font-medium">
+              <button id="turnHoundFirstBtn" class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white font-bold transition flex items-center gap-1.5 shadow-md shadow-cyan-600/30">
+                🐕 猟犬先攻 <span class="text-[10px] bg-cyan-950 px-1.5 py-0.5 rounded text-cyan-200 border border-cyan-800">正規 23手</span>
+              </button>
+              <button id="turnHareFirstBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                🐰 ウサギ先攻 <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">猟犬後攻 24手</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- リセットボタン -->
+          <button id="resetPlaygroundBtn" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition flex items-center gap-1.5 border border-slate-700 ml-auto">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 盤面をリセット
+          </button>
+        </div>
+
+        <!-- 先攻・後攻と手数の関係についての注釈バナー -->
+        <div id="firstTurnNotice" class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 flex items-start gap-3">
+          <i data-lucide="info" class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5"></i>
+          <div id="firstTurnNoticeText" class="leading-relaxed">
+            <!-- JSで動的に初期化 -->
           </div>
         </div>
-        <button id="resetPlaygroundBtn" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition flex items-center gap-1.5 border border-slate-700">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 盤面をリセット
-        </button>
       </div>
 
       <!-- Play Board & Status -->
@@ -1481,6 +1562,7 @@
     let playState = {
       hounds: [0, 1, 3],
       hare: 10,
+      initialTurn: 'H', // 'H' (猟犬先攻 23手) or 'R' (ウサギ先攻 24手)
       turn: 'H',
       houndTurns: 0,
       playerRole: 'R', // 'R' = player is Hare, 'H' = player is Hounds
@@ -1491,36 +1573,78 @@
     function initPlayground() {
       document.getElementById('playAsHareBtn').onclick = () => setPlayerRole('R');
       document.getElementById('playAsHoundBtn').onclick = () => setPlayerRole('H');
+      document.getElementById('turnHoundFirstBtn').onclick = () => setFirstTurn('H');
+      document.getElementById('turnHareFirstBtn').onclick = () => setFirstTurn('R');
       document.getElementById('resetPlaygroundBtn').onclick = resetPlayground;
 
       const svg = document.getElementById('playBoardSvg');
       svg.addEventListener('click', onPlayBoardClick);
 
+      updateTurnExplainer();
       resetPlayground();
+    }
+
+    function setFirstTurn(turn) {
+      playState.initialTurn = turn;
+      const houndBtn = document.getElementById('turnHoundFirstBtn');
+      const hareBtn = document.getElementById('turnHareFirstBtn');
+      if (turn === 'H') {
+        houndBtn.className = 'px-3 py-1.5 rounded-lg bg-cyan-600 text-white font-bold transition flex items-center gap-1.5 shadow-md shadow-cyan-600/30';
+        hareBtn.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5';
+      } else {
+        houndBtn.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5';
+        hareBtn.className = 'px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold transition flex items-center gap-1.5 shadow-md shadow-rose-600/30';
+      }
+      updateTurnExplainer();
+      resetPlayground();
+    }
+
+    function updateTurnExplainer() {
+      const isHoundFirst = playState.initialTurn === 'H';
+      const isPlayerHare = playState.playerRole === 'R';
+      const explainer = document.getElementById('firstTurnNoticeText');
+      if (!explainer) return;
+
+      if (isHoundFirst) {
+        explainer.innerHTML = `
+          <strong>【🐕 猟犬先攻（正規ルール・最短23手）】</strong><br>
+          猟犬が初手を打ちます。後退解析の完全証明により、猟犬の最善手により最短 <span class="text-cyan-400 font-bold font-mono">23手</span> でウサギをチェックメイトできます。
+          ${isPlayerHare ? '（AIの猟犬が初手を指します）' : '（あなたの猟犬の手番からスタートします）'}
+        `;
+      } else {
+        explainer.innerHTML = `
+          <strong>【🐰 ウサギ先攻（猟犬後攻・最短24手）】</strong><br>
+          ウサギが初手を打ちます。ウサギが先手で動いても猟犬の勝率は100%のままですが、ウサギの初手分だけ手数が伸びて最短 <span class="text-amber-400 font-bold font-mono">24手</span> で猟犬勝利となります。
+          ${isPlayerHare ? '（あなたのウサギの手番からスタートします。好きなマスへ逃げてください）' : '（AIのウサギが初手を指します）'}
+        `;
+      }
+      if (window.lucide) lucide.createIcons();
     }
 
     function setPlayerRole(role) {
       playState.playerRole = role;
       document.getElementById('playAsHareBtn').className = role === 'R' ?
-        'px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold transition' :
+        'px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold transition shadow-md shadow-rose-600/30' :
         'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
       document.getElementById('playAsHoundBtn').className = role === 'H' ?
-        'px-3 py-1.5 rounded-lg bg-cyan-600 text-white font-bold transition' :
+        'px-3 py-1.5 rounded-lg bg-cyan-600 text-white font-bold transition shadow-md shadow-cyan-600/30' :
         'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+      updateTurnExplainer();
       resetPlayground();
     }
 
     function resetPlayground() {
       playState.hounds = [0, 1, 3];
       playState.hare = 10;
-      playState.turn = 'H';
+      playState.turn = playState.initialTurn;
       playState.houndTurns = 0;
       playState.selectedPiece = null;
       playState.gameOver = false;
 
       updatePlayView();
 
-      if (playState.playerRole === 'R' && playState.turn === 'H') {
+      // 手番がプレイヤーと異なる場合、AIが初手を打つ
+      if (playState.turn !== playState.playerRole) {
         setTimeout(makeAiMove, 600);
       }
     }
