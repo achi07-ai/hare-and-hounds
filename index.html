@@ -631,11 +631,136 @@
       </div>
     </div>
 
-    <!-- Subsection 2-4: 波及ステップのトレースと分布 -->
+    
+    <!-- Subsection 2.4: Minimax法（ミニマックス法）で行った場合のアルゴリズムと課題 -->
+    <div class="glass-card p-8 rounded-3xl border-slate-800 mb-8 relative overflow-hidden">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center border border-amber-500/30">
+          2.4
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-white">Minimax法（ミニマックス法）で行った場合のアルゴリズム</h3>
+          <span class="text-xs text-amber-400 font-mono">前向きゲーム木探索のアルゴリズム構造と「ウサギと猟犬」における致命的課題</span>
+        </div>
+      </div>
+
+      <p class="text-sm text-slate-300 leading-relaxed mb-6">
+        「後退解析ではなく、チェスやオセロのように<strong>Minimax法（ミニマックス法）</strong>で解くことはできないのか？」という疑問が生じます。ここでは、Minimax法をウサギと猟犬に適用した場合のアルゴリズムの仕組みと、なぜこのゲームにおいてMinimax法が大きな困難に直面するのかを詳しく解説します。
+      </p>
+
+      <!-- 1. Minimax原理 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+          <h4 class="text-sm font-bold text-amber-300 font-mono mb-2 flex items-center gap-2">
+            <i data-lucide="git-pull-request" class="w-4 h-4"></i> Minimax法の基本原理
+          </h4>
+          <p class="text-xs text-slate-300 leading-relaxed mb-3">
+            Minimax法は、現在局面（ルート）から未来に向かって交互に合法手を展開し、末端の評価値を根へと引き上げる（Backpropagation）前向き探索アルゴリズムです。
+          </p>
+          <ul class="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+            <li><strong class="text-cyan-300">MAXノード（猟犬の手番）:</strong> 自分に最も有利な手（スコア最大化 $\max$）を選択</li>
+            <li><strong class="text-rose-300">MINノード（ウサギの手番）:</strong> 相手に最も不利な手（スコア最小化 $\min$）を選択</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+          <h4 class="text-sm font-bold text-amber-300 font-mono mb-2">再帰評価関数の数式</h4>
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed">
+            $$V(s) = \begin{cases}
+            +1 \text{ (or } +\infty) & \text{if 猟犬勝利（ウサギ手詰まり）} \\
+            -1 \text{ (or } -\infty) & \text{if ウサギ勝利（背後突破）} \\
+            \max_{u \in \text{Succ}(s)} V(u) & \text{if } \text{Turn}(s) = \text{Hound} \\
+            \min_{u \in \text{Succ}(s)} V(u) & \text{if } \text{Turn}(s) = \text{Hare}
+            \end{cases}$$
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 擬似コード -->
+      <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 mb-6">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-800/80 pb-2">
+          <span class="text-xs font-mono font-bold text-amber-400 flex items-center gap-2">
+            <i data-lucide="code" class="w-4 h-4"></i> Minimax_Search_for_HareAndHounds(state, depth)
+          </span>
+          <span class="text-[11px] font-mono text-slate-500">Recursive Forward Search</span>
+        </div>
+        <pre class="font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed">
+<span class="text-purple-400">def</span> <span class="text-blue-400">minimax</span>(state, depth, visited_path):
+    <span class="text-slate-500"># 1. 終局判定</span>
+    <span class="text-blue-400">if</span> is_hare_trapped(state): <span class="text-blue-400">return</span> +<span class="text-cyan-400">1000</span> - depth  <span class="text-slate-500"># 最速勝利を促すため深さを引く</span>
+    <span class="text-blue-400">if</span> is_hare_escaped(state): <span class="text-blue-400">return</span> -<span class="text-rose-400">1000</span> + depth  <span class="text-slate-500"># 最長抵抗を促すため深さを足す</span>
+
+    <span class="text-slate-500"># 2. 循環（同一局面ループ）の検出</span>
+    <span class="text-blue-400">if</span> state <span class="text-blue-400">in</span> visited_path:
+        <span class="text-blue-400">return</span> <span class="text-amber-300">0</span>  <span class="text-slate-500"># 千日手ループ（引き分け）</span>
+
+    visited_path.add(state)
+
+    <span class="text-slate-500"># 3. 再帰的探索</span>
+    <span class="text-blue-400">if</span> state.turn == <span class="text-cyan-400">'HOUND'</span>:
+        max_eval = -float(<span class="text-emerald-400">'inf'</span>)
+        <span class="text-blue-400">for</span> succ <span class="text-blue-400">in</span> get_legal_moves(state):
+            eval = minimax(succ, depth + <span class="text-cyan-400">1</span>, visited_path.copy())
+            max_eval = max(max_eval, eval)
+        <span class="text-blue-400">return</span> max_eval
+    <span class="text-blue-400">else</span>:
+        min_eval = float(<span class="text-emerald-400">'inf'</span>)
+        <span class="text-blue-400">for</span> succ <span class="text-blue-400">in</span> get_legal_moves(state):
+            eval = minimax(succ, depth + <span class="text-cyan-400">1</span>, visited_path.copy())
+            min_eval = min(min_eval, eval)
+        <span class="text-blue-400">return</span> min_eval</pre>
+      </div>
+
+      <!-- 3. なぜMinimax法では困難なのか（3大課題） -->
+      <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-4 flex items-center gap-2">
+        <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400"></i>
+        ウサギと猟犬においてMinimax法が直面する3つの致命的障壁
+      </h4>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <!-- 障壁1 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <strong class="text-rose-400 block mb-1.5 font-bold flex items-center gap-1.5">
+            <i data-lucide="repeat" class="w-3.5 h-3.5"></i> ① 無限循環（Loopy）による停止不能
+          </strong>
+          <p class="text-slate-400 leading-relaxed">
+            チェスやオセロは不可逆な変化（駒取りや石の増加）が多いのに対し、本作は駒が何度でも元に戻れます。通常の木探索では探索木が無限に伸びて<strong>スタックオーバーフロー</strong>を起こします。経路チェックを入れても、ループの「真のゲーム価値」を前向き探索で判定するのは極めて困難です。
+          </p>
+        </div>
+
+        <!-- 障壁2 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <strong class="text-amber-400 block mb-1.5 font-bold flex items-center gap-1.5">
+            <i data-lucide="flame" class="w-3.5 h-3.5"></i> ② 70兆ノードの計算爆発
+          </strong>
+          <p class="text-slate-400 leading-relaxed">
+            ウサギが最善に粘ると決着まで23手（23 ply）かかります。平均分岐数 $b \approx 4$ とすると、探索木全体のノード数は $4^{23} \approx \mathbf{70兆局面}$ に膨れ上がります。毎秒1,000万局面を探索できる超高速コンピュータでも、<strong>計算に80日以上</strong>かかります。
+          </p>
+        </div>
+
+        <!-- 障壁3 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <strong class="text-indigo-400 block mb-1.5 font-bold flex items-center gap-1.5">
+            <i data-lucide="eye-off" class="w-3.5 h-3.5"></i> ③ 静的評価関数の破綻（水平線効果）
+          </strong>
+          <p class="text-slate-400 leading-relaxed">
+            計算量を抑えるため深さ制限（例: 8手先まで）を設けると、末端で盤面を近似評価する必要があります。しかし本作では「ウサギが逃げ回れている」ように見えても数手後に完全包囲される罠が多く、幾何学的距離などの評価関数が全く通用しません。
+          </p>
+        </div>
+      </div>
+
+      <!-- まとめ：後退解析との対比 -->
+      <div class="mt-6 p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-xs text-slate-300 leading-relaxed">
+        <strong class="text-emerald-300 font-mono">後退解析（Retrograde Analysis）が圧勝する理由：</strong><br>
+        Minimax法は「同じ局面を木の異なる枝で何度も重複展開してしまう」ために70兆ノードへ爆発します。一方、後退解析は状態空間を有向グラフとして集約し、<strong>重複を排除した全2,640状態だけを終局から1回逆流させる</strong>ため、わずか30ミリ秒で数学的に完全な解（100%厳密な勝敗と最善手数）が得られるのです。
+      </div>
+    </div>
+
+
+      <!-- Subsection 2.5: 波及ステップのトレースと分布 -->
     <div class="glass-card p-8 rounded-3xl border-slate-800 mb-8">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 font-mono font-bold flex items-center justify-center border border-cyan-500/30">
-          2.4
+          2.5
         </div>
         <h3 class="text-2xl font-bold text-white">波及プロセス（$d=0$ から $d=23$ への真実の浸透）</h3>
       </div>
