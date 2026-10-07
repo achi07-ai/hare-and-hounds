@@ -1015,7 +1015,196 @@
             キューが空になった後、未確定のまま残った545状態は、グラフ上で強連結成分（サイクル）を形成しています。お互いが最善を尽くすと永遠に同じ盤面をグルグル回り続け、決着がつかない局面です。
           </div>
         </div>
+      
+    <!-- Subsection 2.7: 後退解析以外の最善手導出手法と徹底比較 -->
+    <div class="glass-card p-8 rounded-3xl border-slate-800 mb-8 relative overflow-hidden">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 font-mono font-bold flex items-center justify-center border border-teal-500/30">
+          2.7
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-white">後退解析以外に最善手を導き出す手法はあるのか？</h3>
+          <span class="text-xs text-teal-400 font-mono">置換表付きαβ探索、動的計画法（値反復）、SATソルバー、証明数探索、強化学習（AlphaZero）との数理的対比</span>
+        </div>
       </div>
+
+      <p class="text-sm text-slate-300 leading-relaxed mb-6">
+        「後退解析（Retrograde Analysis）以外に、このゲームの最善手を導き出すアルゴリズムはないのか？」という疑問に対する答えは<strong>「複数の有力な代替手法が存在するが、計算効率・閉路処理・成果物の網羅性において後退解析が圧倒的に優れている」</strong>です。ゲーム情報科学やAI研究で用いられる代表的な5つの代替手法と、後退解析との根本的な違いを解説します。
+      </p>
+
+      <!-- 5つの代替手法カード -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+        <!-- 1. TT-AlphaBeta -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-cyan-400 flex items-center gap-1.5">
+                <i data-lucide="database" class="w-4 h-4"></i> ① 置換表付き反復深化αβ探索
+              </span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">前向き木探索系</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              チェスや将棋エンジンで標準的に使われる手法。同一局面の合流を有向非巡回グラフ（DAG）のように<strong>置換表（Transposition Table）</strong>にメモ化し、深さを1手ずつ深めながら（反復深化）探索します。
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+            <strong class="text-cyan-300">後退解析との違い:</strong> オンデマンド型のため「現在局面からの次の一手」を求めるには省メモリ。しかし循環ループを扱うには経路履歴記録（GHI対策）が必須で、全局面の完全辞書を一度に構築することはできません。
+          </div>
+        </div>
+
+        <!-- 2. Value Iteration -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-amber-400 flex items-center gap-1.5">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i> ② 値反復法（動的計画法 / DP）
+              </span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">不動点収束系</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              マルコフ決定プロセス（MDP）や強化学習の数理的基礎となる手法。全2,640状態の評価値ベクトルを用意し、<strong>ベルマン最適方程式</strong>を全状態に対して反復適用して不動点（Fixed Point）へと収束させます。
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+            <strong class="text-amber-300">後退解析との違い:</strong> 後退解析は「確定した終局（距離0）」からキュー（BFS）で波及させるため各状態が1回で確定（計算量 $O(V+E)$）。一方、値反復法は全状態を一括で何十回も再計算するため計算量が数倍〜数十倍劣ります。
+          </div>
+        </div>
+
+        <!-- 3. SAT / SMT -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-purple-400 flex items-center gap-1.5">
+                <i data-lucide="binary" class="w-4 h-4"></i> ③ SATソルバー / 有界モデル検査
+              </span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">記号的論理証明系</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              ゲームの全遷移規則と「$k$手以内に猟犬が完全包囲できるか？」をブール論理式（CNF）に符号化し、高性能SATソルバー（Z3やKissat等）で解かせる手法（Bounded Model Checking）。
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+            <strong class="text-purple-300">後退解析との違い:</strong> 木を展開せず論理制約の充足性として解くため、「23手で勝てるか」の数学的検証には極めて強力。ただし、プレイヤーがリアルタイムに参照する「最善手辞書（テーブルベース）」の生成には不向きです。
+          </div>
+        </div>
+
+        <!-- 4. Proof Number Search -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
+                <i data-lucide="check-square" class="w-4 h-4"></i> ④ 証明数探索（PNS / df-pn法）
+              </span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">詰み証明特化系</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              詰将棋やチェッカー・オセロの完全解析で威力を発揮するAND/OR木探索アルゴリズム。各ノードに「勝ちを証明するために必要な最小葉ノード数（証明数）」を割り当て、最も効率的な枝を優先展開します。
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+            <strong class="text-emerald-300">後退解析との違い:</strong> 「勝敗の証明」に特化しており詰み筋を直線的に見抜く力があります。しかし本作のように駒が元に戻れる循環ゲームでは、閉路処理（グラフ拡張）を組み込まないと無限ループに陥ります。
+          </div>
+        </div>
+
+        <!-- 5. AlphaZero / MCTS -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between md:col-span-2 lg:col-span-2">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-rose-400 flex items-center gap-1.5">
+                <i data-lucide="cpu" class="w-4 h-4"></i> ⑤ モンテカルロ木探索（MCTS）＋深層強化学習（AlphaZero型）
+              </span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">機械学習・近似系</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+              囲碁や将棋で人間を超えた近代AI手法。自己対戦を繰り返しながらディープニューラルネットワーク（Policy/Value Network）で局面評価と指し手確率を学習し、MCTSで先読みします。
+            </p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400">
+            <strong class="text-rose-300">後退解析との違い:</strong> **「確率的近似（ヒューリスティクス）」であり数学的な証明ではありません**。特に本作では非最善手での猟犬勝率がわずか2.1%しかないため、初期のロールアウトがほぼウサギ勝ちとなり、評価値が歪んで「23手の針の穴を通す完全包囲」を見落とす探索バイアス（Exploration Trap）に陥ります。
+          </div>
+        </div>
+      </div>
+
+      <!-- 総合比較マトリクス表 -->
+      <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-3 flex items-center gap-2">
+        <i data-lucide="table" class="w-4 h-4 text-teal-400"></i>
+        最善手導出アルゴリズムの多角的一覧・対比表
+      </h4>
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full text-left text-xs font-mono text-slate-300 bg-slate-900/80 rounded-xl overflow-hidden border border-slate-800">
+          <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="py-2.5 px-4">手法名</th>
+              <th class="py-2.5 px-4">探索の向き</th>
+              <th class="py-2.5 px-4">解の性質</th>
+              <th class="py-2.5 px-4">閉路（千日手）の処理</th>
+              <th class="py-2.5 px-4">最終成果物</th>
+              <th class="py-2.5 px-4 text-teal-400">本作への適性</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            <tr class="hover:bg-slate-800/40 bg-teal-950/20">
+              <td class="py-2.5 px-4 font-bold text-teal-300 flex items-center gap-1.5">
+                <i data-lucide="award" class="w-3.5 h-3.5 text-teal-400"></i> 後退解析 (Retrograde)
+              </td>
+              <td class="py-2 px-4 text-cyan-300 font-bold">終局 $\to$ 初期（逆流）</td>
+              <td class="py-2 px-4 text-emerald-400 font-bold">数学的厳密解 (Exact)</td>
+              <td class="py-2 px-4 text-emerald-300 font-bold">未到達領域として自然分離</td>
+              <td class="py-2 px-4 text-white">全2,640状態の完全辞書</td>
+              <td class="py-2 px-4 text-teal-300 font-extrabold">◎ 圧倒的最適 (30ms)</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2.5 px-4 font-bold text-slate-200">置換表付きαβ探索</td>
+              <td class="py-2 px-4">現在 $\to$ 未来（前向き）</td>
+              <td class="py-2 px-4 text-emerald-400">数学的厳密解 (Exact)</td>
+              <td class="py-2 px-4 text-amber-300">GHI対策・経路履歴追跡が必要</td>
+              <td class="py-2 px-4">現在局面の最善手のみ</td>
+              <td class="py-2 px-4 text-slate-400">△ 深さ23まで到達に工夫要</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2.5 px-4 font-bold text-slate-200">値反復法 (DP / MDP)</td>
+              <td class="py-2 px-4">全局面同時反復</td>
+              <td class="py-2 px-4 text-emerald-400">数学的厳密解 (Exact)</td>
+              <td class="py-2 px-4 text-cyan-300">不動点への収束で解消</td>
+              <td class="py-2 px-4">全状態の価値関数ベクトル</td>
+              <td class="py-2 px-4 text-amber-300">◯ 厳密だが後退解析より低速</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2.5 px-4 font-bold text-slate-200">SATソルバー / BMC</td>
+              <td class="py-2 px-4">命題論理式の充足性</td>
+              <td class="py-2 px-4 text-emerald-400">数学的厳密解 (Exact)</td>
+              <td class="py-2 px-4 text-purple-300">時間ステップ $k$ への展開</td>
+              <td class="py-2 px-4">23手詰めの論理的充足証明</td>
+              <td class="py-2 px-4 text-cyan-300">◯ 特定手数の証明に極めて強力</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2.5 px-4 font-bold text-slate-200">証明数探索 (df-pn)</td>
+              <td class="py-2 px-4">前向き AND/OR木探索</td>
+              <td class="py-2 px-4 text-emerald-400">数学的厳密解 (Exact)</td>
+              <td class="py-2 px-4 text-rose-300">グラフ拡張・閉路回避が必要</td>
+              <td class="py-2 px-4">勝利局面への証明木</td>
+              <td class="py-2 px-4 text-slate-400">△ 閉路拡張アルゴリズム必須</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2.5 px-4 font-bold text-slate-200">AlphaZero (MCTS+NN)</td>
+              <td class="py-2 px-4">自己対戦サンプリング</td>
+              <td class="py-2 px-4 text-rose-400">確率的近似 (Heuristic)</td>
+              <td class="py-2 px-4 text-slate-400">手数上限打ち切り</td>
+              <td class="py-2 px-4">NN方策・価値ネットワーク</td>
+              <td class="py-2 px-4 text-rose-400">× 針の穴の23手詰めで学習破綻</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 結論コラム -->
+      <div class="p-5 rounded-2xl bg-teal-950/30 border border-teal-800/40 text-xs text-slate-300 leading-relaxed">
+        <strong class="text-teal-300 font-mono text-sm block mb-1.5">なぜ「ウサギと猟犬」では後退解析が絶対的な王者なのか？</strong>
+        囲碁や将棋のように状態空間が $10^{70}$ を超える巨大ゲームでは、全状態をメモリに乗せられないため「前向き探索（αβ探索やMCTS）」が必須となります。<br>
+        しかし、「ウサギと猟犬」のように状態空間が全2,640状態（数キロバイト）と小さく、かつ駒が何度でも元に戻れる「千日手ループ」が縦横無尽に存在するゲームにおいては、<strong>前向き探索が抱える弱点（ループ検出・GHI問題・静的評価の破綻）をすべて無効化できる「後退解析」こそが、最も美しく完璧な最適解</strong>となるのです。
+      </div>
+    </div>
+
     </div>
   </section>
 
